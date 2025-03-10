@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduPortal – Dein digitaler Lernassistent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="eduportal.png" type="image/png">
+</head>
+<body class="bg-blue-50 text-gray-800">
+  <!-- Navigation -->
+  <nav class="bg-blue-700 text-white">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="#" class="text-3xl font-bold">EduPortal</a>
+      <button id="menu-toggle" class="sm:hidden focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <ul id="menu-items" class="hidden sm:flex space-x-6">
+        <li><a href="#home" class="hover:underline">Home</a></li>
+        <li><a href="#kurse" class="hover:underline">Kurse</a></li>
+        <li><a href="#chat" class="hover:underline">KI Chat</a></li>
+        <li><a href="#kontakt" class="hover:underline">Kontakt</a></li>
+        <li><a href="#impressum" class="hover:underline">Impressum</a></li>
+        <li><a href="#datenschutz" class="hover:underline">Datenschutz</a></li>
+      </ul>
+    </div>
+    <!-- Mobile Menü -->
+    <div id="mobile-menu" class="sm:hidden hidden px-4 pb-4">
+      <ul class="space-y-2">
+        <li><a href="#home" class="hover:underline">Home</a></li>
+        <li><a href="#kurse" class="hover:underline">Kurse</a></li>
+        <li><a href="#chat" class="hover:underline">KI Chat</a></li>
+        <li><a href="#kontakt" class="hover:underline">Kontakt</a></li>
+        <li><a href="#impressum" class="hover:underline">Impressum</a></li>
+        <li><a href="#datenschutz" class="hover:underline">Datenschutz</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hauptinhalt -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- Hero Section -->
+    <section id="home" class="mb-12">
+      <h1 class="text-5xl font-bold text-center text-blue-700 mb-4">Willkommen bei EduPortal</h1>
+      <p class="text-center text-lg text-gray-600">Dein digitaler Lernassistent für Kurse, Nachrichten und interaktive KI-Unterstützung.</p>
+    </section>
+
+    <!-- Kursplan Section -->
+    <section id="kurse" class="mb-12">
+      <h2 class="text-4xl font-semibold text-blue-700 mb-6 text-center">Kursplan für Heute</h2>
+      <div id="kursplan" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <!-- Beispielhafte Kurskarten -->
+        <div class="bg-white shadow rounded p-4">
+          <h3 class="text-2xl font-bold mb-2">Mathematik</h3>
+          <p class="text-gray-600">08:00 – 09:30 Uhr</p>
+        </div>
+        <div class="bg-white shadow rounded p-4">
+          <h3 class="text-2xl font-bold mb-2">Englisch</h3>
+          <p class="text-gray-600">09:45 – 11:15 Uhr</p>
+        </div>
+        <div class="bg-white shadow rounded p-4">
+          <h3 class="text-2xl font-bold mb-2">Biologie</h3>
+          <p class="text-gray-600">11:30 – 13:00 Uhr</p>
+        </div>
+        <!-- Weitere Kurskarten können hier ergänzt werden -->
+      </div>
+    </section>
+
+    <!-- Interaktiver KI Chat Section -->
+    <section id="chat" class="mb-12">
+      <h2 class="text-4xl font-semibold text-blue-700 mb-6 text-center">Interaktiver KI Chat</h2>
+      <div id="chat-box" class="bg-white rounded shadow p-4 h-64 overflow-y-auto mb-4">
+        <!-- Chat-Nachrichten werden hier angezeigt -->
+      </div>
+      <form id="chat-form" class="flex">
+        <input type="text" id="chat-message" placeholder="Stelle deine Frage hier..." class="flex-grow p-3 border rounded-l focus:outline-none" required>
+        <button type="submit" class="bg-blue-700 text-white px-4 rounded-r hover:bg-blue-800">Senden</button>
+      </form>
+      <p class="mt-2 text-sm text-gray-500">Hinweis: Anfragen, die nach Lösungen fragen, werden nicht beantwortet.</p>
+    </section>
+
+    <!-- Kontakt Section -->
+    <section id="kontakt" class="mb-12">
+      <h2 class="text-4xl font-semibold text-blue-700 mb-6 text-center">Kontakt</h2>
+      <div class="bg-white rounded shadow p-6">
+        <p class="text-lg">Bei Fragen oder Feedback erreichst du uns unter:</p>
+        <p class="mt-2"><strong>Email:</strong> support@eduportal.de</p>
+        <p><strong>Telefon:</strong> +49 123 456789</p>
+      </div>
+    </section>
+    
+    <!-- Impressum Section -->
+    <section id="impressum" class="mb-12">
+      <h2 class="text-4xl font-semibold text-blue-700 mb-6 text-center">Impressum</h2>
+      <div class="bg-white rounded shadow p-6">
+        <p>Impressumsangaben und rechtliche Informationen.</p>
+      </div>
+    </section>
+
+    <!-- Datenschutz Section -->
+    <section id="datenschutz" class="mb-12">
+      <h2 class="text-4xl font-semibold text-blue-700 mb-6 text-center">Datenschutz</h2>
+      <div class="bg-white rounded shadow p-6">
+        <p>Informationen zum Datenschutz und zur Datensicherheit.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- JavaScript -->
+  <script>
+    // Mobile Menü Toggle
+    const menuToggle = document.getElementById("menu-toggle");
+    const mobileMenu = document.getElementById("mobile-menu");
+    menuToggle.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
+
+    // KI Chat Funktionalität
+    const chatForm = document.getElementById("chat-form");
+    const chatMessageInput = document.getElementById("chat-message");
+    const chatBox = document.getElementById("chat-box");
+    // Beispielhafter API-Endpunkt für KI – bitte anpassen
+    const KI_API_URL = "https://api.example.com/ki-chat";
+
+    function appendChatMessage(message, sender = "bot") {
+      const messageDiv = document.createElement("div");
+      messageDiv.className = sender === "user" ? "text-right mb-2" : "text-left mb-2";
+      messageDiv.innerHTML = `<span class="inline-block p-2 rounded ${sender === "user" ? "bg-blue-200" : "bg-gray-200"}">${message}</span>`;
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Prüft, ob die Nachricht eine Lösung anfragt
+    function isSolutionRequest(text) {
+      return text.toLowerCase().includes("lösung");
+    }
+
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userText = chatMessageInput.value.trim();
+      if (!userText) return;
+      appendChatMessage(userText, "user");
+      chatMessageInput.value = "";
+
+      // Falls nach Lösungen gefragt wird, wird keine Antwort generiert
+      if (isSolutionRequest(userText)) {
+        appendChatMessage("Entschuldigung, ich kann keine Lösungen bereitstellen.", "bot");
+        return;
+      }
+
+      try {
+        const response = await fetch(KI_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: userText })
+        });
+        if (!response.ok) throw new Error("Fehler beim Abrufen der Antwort.");
+        const data = await response.json();
+        // Annahme: Die Antwort steht unter data.reply – passe dies ggf. an
+        appendChatMessage(data.reply || "Keine Antwort erhalten.", "bot");
+      } catch (error) {
+        console.error("KI Chat Fehler:", error);
+        appendChatMessage("Ein Fehler ist aufgetreten. Bitte versuche es später erneut.", "bot");
+      }
+    });
+  </script>
+</body>
+</html>

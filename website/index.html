@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Startseite - SCHOOL NOTE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="schoolnote.jpg" type="image/x-icon">
+</head>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="tailwind.cofig.js"></script>
+<body class="bg-orange-100 text-gray-900">
+
+  <div id="navbar-container"></div>
+
+  <script>
+function loadNavbar() {
+      fetch('navbar.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('navbar-container').innerHTML = html;
+          // Nachdem die Navbar geladen wurde, initialisiere die Event Listener
+          initNavbar();
+        })
+        .catch(error => console.error('Fehler beim Laden der Navbar:', error));
+    }
+
+    // Initialisierung der Navbar-Funktionalität
+    function initNavbar() {
+      console.log("Navbar initialisiert");
+
+      // Mobile Menü Toggle
+      const navToggle = document.getElementById('nav-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+
+      if (navToggle && mobileMenu) {
+        navToggle.addEventListener('click', function(event) {
+          event.preventDefault();
+          mobileMenu.classList.toggle('hidden');
+          const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+          navToggle.setAttribute('aria-expanded', !expanded);
+          navToggle.classList.toggle('bg-orange-700');
+        });
+      } else {
+        console.error("Element(e) nav-toggle oder mobile-menu nicht gefunden!");
+      }
+
+      // Mobile "Mehr" Menü Toggle
+      const mobileMoreToggle = document.getElementById('mobile-more-toggle');
+      const mobileMoreMenu = document.getElementById('mobile-more-menu');
+
+      if (mobileMoreToggle && mobileMoreMenu) {
+        mobileMoreToggle.addEventListener('click', function(event) {
+          event.preventDefault();
+          mobileMoreMenu.classList.toggle('hidden');
+          const chevronIcon = this.querySelector('svg');
+          if (mobileMoreMenu.classList.contains('hidden')) {
+            chevronIcon.style.transform = 'rotate(0deg)';
+          } else {
+            chevronIcon.style.transform = 'rotate(180deg)';
+          }
+        });
+      } else {
+        console.error("Element(e) mobile-more-toggle oder mobile-more-menu nicht gefunden!");
+      }
+    }
+
+    // Starte das Laden der Navbar, sobald der DOM geladen wurde
+    document.addEventListener("DOMContentLoaded", loadNavbar);
+  </script>
+  
+
+
+  <div class="container mx-auto p-6">
+
+    <h3 class="text-4xl font-bold text-center text-orange-600 mb-8">
+      Dashboard
+    </h3>
+
+
+    <section class="mb-8">
+      <h4 class="text-3xl font-semibold text-orange-600 mb-4">
+        Heute
+      </h4>
+      <div id="todayContainer" class="space-y-4">
+        <p class="text-gray-600">Lade Aufgaben...</p>
+      </div>
+    </section>
+
+
+    <section class="mb-8">
+      <h4 class="text-3xl font-semibold text-orange-600 mb-4">
+       Morgen
+      </h4>
+      <div id="tomorrowContainer" class="space-y-4">
+        <p class="text-gray-600">Lade Aufgaben...</p>
+      </div>
+    </section>
+
+   
+    <section class="mb-8">
+      <h4 class="text-3xl font-semibold text-orange-600 mb-4">
+        Stundenplan
+      </h4>
+      <div id="stundenplanTodayContainer" class="space-y-4">
+        <p class="text-gray-600">Lade Stundenplan...</p>
+      </div>
+    </section>
+  </div>
+
+  <div id="commentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-4 rounded">
+        <textarea id="commentInput" class="w-full h-24 p-2 border rounded"></textarea>
+        <div class="flex justify-end mt-2">
+            <button id="cancelButton" class="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded">Abbrechen</button>
+            <button id="saveButton" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Speichern</button>
+        </div>
+    </div>
+</div>
+
+
+ 
+  <script>
+    
+    const BASE_URL = "https://api.schoolnote.eu";
+
+   
+    const USER_ID = localStorage.getItem("user_id");
+    if (!USER_ID) {
+      window.location.href = "auth.html";
+    }
+
+ 
+    async function fetchJSON(url, options = {}) {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Serverfehler");
+      }
+      return await response.json();
+    }
+  </script>
+
+
+  <script>
+   
+    function formatDate(dateObj) {
+      return dateObj.toISOString().split("T")[0];
+    }
+
+   
+    async function loadAllHausaufgaben() {
+      try {
+        const url = `${BASE_URL}/hausaufgaben?user_id=${USER_ID}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(response.statusText);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Fehler beim Laden der Hausaufgaben:", error);
+        alert("Fehler beim Laden der Hausaufgaben: " + error.message);
+        return [];
+      }
+    }
+
+    async function updateHausaufgabeStatus(taskId, status) {
+      try {
+        const response = await fetch(`${BASE_URL}/hausaufgaben/${taskId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        if (response.ok) {
+          refreshTasks();
+        } else {
+          console.error("Fehler beim Aktualisieren der Hausaufgabe:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren der Hausaufgabe:", error);
+      }
+    }
+
+    
+    async function deleteHausaufgabe(taskId) {
+      if (confirm("Möchtest du diese Hausaufgabe wirklich löschen?")) {
+        try {
+          const response = await fetch(`${BASE_URL}/hausaufgaben/${taskId}`, {
+            method: 'DELETE'
+          });
+          if (response.ok) {
+            refreshTasks();
+          } else {
+            console.error("Fehler beim Löschen der Hausaufgabe:", response.statusText);
+          }
+        } catch (error) {
+          console.error("Fehler beim Löschen der Hausaufgabe:", error);
+        }
+      }
+    }
+
+    function renderTasks(tasks, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  if (tasks.length === 0) {
+    container.innerHTML = `<p class="text-gray-600">Keine Aufgaben gefunden.</p>`;
+    return;
+  }
+  tasks.forEach(task => {
+    const taskDiv = document.createElement("div");
+    taskDiv.className = `relative bg-white p-4 rounded shadow my-2 ${task.status === 'erledigt' ? 'bg-green-100' : ''}`;
+    taskDiv.innerHTML = `
+      <h3 class="text-xl font-bold">${task.title}</h3>
+      <p>${task.description || "Keine Beschreibung"}</p>
+      <p class="text-sm text-gray-500">${new Date(task.deadline).toLocaleDateString()}</p>
+      <p class="text-sm text-gray-500">Status: ${task.status}</p>
+      <p class="text-sm text-gray-500">Typ: ${task.task_type === "test" ? "Test" : "Hausaufgabe"}</p>
+    `;
+    
+    // Button-Container (Buttons wie Erledigt, Löschen, Kommentar)
+    const btnContainer = document.createElement("div");
+    btnContainer.className = "absolute top-2 right-2 flex flex-col gap-2";
+    btnContainer.innerHTML = `
+      <button onclick="updateHausaufgabeStatus(${task.id}, 'erledigt')" class="bg-green-500 hover:bg-green-600 text-white p-1 rounded w-8 h-8 flex items-center justify-center" title="Erledigt">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </button>
+      <button onclick="deleteHausaufgabe(${task.id})" class="bg-red-500 hover:bg-red-600 text-white p-1 rounded w-8 h-8 flex items-center justify-center" title="Löschen">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <button onclick="showCommentModal(${task.id})" class="bg-purple-500 hover:bg-purple-600 text-white p-1 rounded w-8 h-8 flex items-center justify-center" title="Kommentar">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.96 8.96 0 01-4.654-1.181L2 17l1.181-3.346A7.973 7.973 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clip-rule="evenodd" />
+        </svg>
+      </button>
+    `;
+    
+    taskDiv.appendChild(btnContainer);
+    container.appendChild(taskDiv);
+  });
+}
+
+async function loadHausaufgaben() {
+  try {
+    const url = `https://api.schoolnote.eu/hausaufgaben?user_id=${USER_ID}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Fehler beim Laden der Hausaufgaben");
+    hausaufgaben = await response.json();
+    // Use refreshTasks() (which uses renderTasks) instead of renderHausaufgaben()
+    refreshTasks();
+  } catch (error) {
+    console.error("Fehler beim Laden der Hausaufgaben:", error);
+  }
+}
+
+// --- Kommentar-Modal ---
+function showCommentModal(taskId) {
+  currentTaskId = taskId;
+  document.getElementById("commentInput").value = "";
+  document.getElementById("commentModal").classList.remove("hidden");
+}
+document.getElementById("cancelButton").addEventListener("click", () => {
+  document.getElementById("commentModal").classList.add("hidden");
+});
+document.getElementById("saveButton").addEventListener("click", async () => {
+  const comment = document.getElementById("commentInput").value.trim();
+  if (comment === "") { 
+    alert("Bitte gib einen Kommentar ein."); 
+    return; 
+  }
+  await fetch(`https://api.schoolnote.eu/hausaufgaben/${currentTaskId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comment })
+  });
+  document.getElementById("commentModal").classList.add("hidden");
+  refreshTasks();
+  // Only call loadKlassenHausaufgaben if the element exists
+  const klassenContainer = document.getElementById("klassenHausaufgabenContainer");
+  if (klassenContainer && klassenContainer.innerHTML !== "") {
+    loadKlassenHausaufgaben();
+  }
+});
+
+ 
+    async function refreshTasks() {
+      const hausaufgaben = await loadAllHausaufgaben();
+      const today = new Date();
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+
+      const todayStr = formatDate(today);
+      const tomorrowStr = formatDate(tomorrow);
+
+      const tasksToday = hausaufgaben.filter(task => task.deadline === todayStr);
+      const tasksTomorrow = hausaufgaben.filter(task => task.deadline === tomorrowStr);
+
+      renderTasks(tasksToday, "todayContainer");
+      renderTasks(tasksTomorrow, "tomorrowContainer");
+    }
+  </script>
+
+
+  <script>
+ 
+    async function loadStundenanzahl() {
+      try {
+        const data = await fetchJSON(`${BASE_URL}/stundenplan_config?user_id=${USER_ID}`);
+        return parseInt(data.stundenanzahl, 10);
+      } catch (error) {
+        console.error(error);
+        return 8;
+      }
+    }
+
+
+    async function loadStundenplanEntries() {
+      try {
+        return await fetchJSON(`${BASE_URL}/stundenplan?user_id=${USER_ID}`);
+      } catch (error) {
+        console.error(error);
+        return [];
+      }
+    }
+
+   
+    function getTodayTag() {
+      const days = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+      const today = new Date();
+      return days[today.getDay()];
+    }
+
+  
+    async function displayStundenplanToday() {
+      const container = document.getElementById("stundenplanTodayContainer");
+      if (!container) return;
+
+      const todayTag = getTodayTag();
+      const validDays = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"];
+      if (!validDays.includes(todayTag)) {
+        container.innerHTML = `<p class="text-gray-600">Heute ist kein regulärer Schultag.</p>`;
+        return;
+      }
+
+      const stundenanzahl = await loadStundenanzahl();
+      const entries = await loadStundenplanEntries();
+
+      const todayEntries = Array(stundenanzahl).fill(null);
+      entries.forEach(entry => {
+        if (entry.tag === todayTag && entry.stunde >= 1 && entry.stunde <= stundenanzahl) {
+          todayEntries[entry.stunde - 1] = entry.name;
+        }
+      });
+
+      let html = `<div class="bg-white p-4 rounded shadow">`;
+      html += `<h3 class="text-xl font-semibold text-orange-600 mb-2">${todayTag}</h3>`;
+      for (let i = 0; i < stundenanzahl; i++) {
+        const fach = todayEntries[i];
+        html += `<div class="p-3 border rounded ${fach ? 'bg-gray-100' : 'bg-gray-200'} mb-2">
+                  ${i + 1}. Stunde: ${fach ? fach : 'Keine Stunde eingetragen'}
+                 </div>`;
+      }
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+  </script>
+
+  
+  <script>
+    window.onload = async function() {
+      await refreshTasks();
+      await displayStundenplanToday();
+    };
+  </script>
+</body>
+</html>

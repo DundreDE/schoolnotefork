@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCHOOL Note - Karteikarten & Grammatik Tabellen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="schoolnote.jpg" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="tailwind.cofig.js"></script>
+  <style>
+    /* CSS für den 3D-Flip-Effekt */
+    .flip-card {
+      perspective: 1000px;
+    }
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-card-front,
+    .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .flip-card-front {
+      background-color: #fff;
+    }
+    .flip-card-back {
+      background-color: #fff;
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body class="bg-orange-100 text-gray-900 min-h-screen flex flex-col">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+
+  <script>
+function loadNavbar() {
+      fetch('navbar.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('navbar-container').innerHTML = html;
+          // Nachdem die Navbar geladen wurde, initialisiere die Event Listener
+          initNavbar();
+        })
+        .catch(error => console.error('Fehler beim Laden der Navbar:', error));
+    }
+
+    // Initialisierung der Navbar-Funktionalität
+    function initNavbar() {
+      console.log("Navbar initialisiert");
+
+      // Mobile Menü Toggle
+      const navToggle = document.getElementById('nav-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+
+      if (navToggle && mobileMenu) {
+        navToggle.addEventListener('click', function(event) {
+          event.preventDefault();
+          mobileMenu.classList.toggle('hidden');
+          const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+          navToggle.setAttribute('aria-expanded', !expanded);
+          navToggle.classList.toggle('bg-orange-700');
+        });
+      } else {
+        console.error("Element(e) nav-toggle oder mobile-menu nicht gefunden!");
+      }
+
+      // Mobile "Mehr" Menü Toggle
+      const mobileMoreToggle = document.getElementById('mobile-more-toggle');
+      const mobileMoreMenu = document.getElementById('mobile-more-menu');
+
+      if (mobileMoreToggle && mobileMoreMenu) {
+        mobileMoreToggle.addEventListener('click', function(event) {
+          event.preventDefault();
+          mobileMoreMenu.classList.toggle('hidden');
+          const chevronIcon = this.querySelector('svg');
+          if (mobileMoreMenu.classList.contains('hidden')) {
+            chevronIcon.style.transform = 'rotate(0deg)';
+          } else {
+            chevronIcon.style.transform = 'rotate(180deg)';
+          }
+        });
+      } else {
+        console.error("Element(e) mobile-more-toggle oder mobile-more-menu nicht gefunden!");
+      }
+    }
+
+    // Starte das Laden der Navbar, sobald der DOM geladen wurde
+    document.addEventListener("DOMContentLoaded", loadNavbar);
+  </script>
+  
+
+  <!-- Hauptinhalt -->
+  <main class="flex-grow container mx-auto p-4 sm:p-6">
+    <h1 class="text-3xl sm:text-4xl font-bold text-center text-orange-600 mb-6">Lernen & Wiederholen</h1>
+
+    <!-- Tab-Navigation (wird nur angezeigt, wenn keine Aufgabe aktiv ist) -->
+    <div id="tab-nav" class="flex justify-center gap-4 mb-6">
+      <button id="tab-cards" class="px-4 py-2 bg-orange-600 text-white rounded active">Karteikarten</button>
+      <button id="tab-grammar" class="px-4 py-2 bg-gray-300 text-gray-800 rounded">Grammatik Tabellen</button>
+    </div>
+
+    <!-- Karteikarten-Bereich -->
+    <section id="cards-section">
+      <div id="groups-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      <div class="mt-8 text-center">
+        <button id="create-group" class="bg-orange-700 hover:bg-orange-800 text-white px-6 sm:px-8 py-3 rounded-full shadow-lg text-base sm:text-lg font-semibold transition-all">
+          + Neue Gruppe erstellen
+        </button>
+      </div>
+      <!-- Modal für neue Gruppe -->
+      <div id="group-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md relative">
+          <h2 class="text-xl sm:text-2xl font-bold text-orange-600 mb-4">Neue Gruppe erstellen</h2>
+          <input type="text" id="group-name" placeholder="Gruppenname" class="border-2 border-orange-400 p-3 rounded-md w-full mb-6 focus:ring-2 focus:ring-orange-500 focus:outline-none">
+          <div class="flex flex-col sm:flex-row justify-end gap-2">
+            <button id="close-modal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">Abbrechen</button>
+            <button id="save-group" class="bg-orange-700 text-white px-4 py-2 rounded hover:bg-orange-800 transition-colors">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Grammatik Tabellen-Bereich -->
+    <section id="grammar-section" class="hidden">
+      <div id="grammar-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      <div class="mt-8 text-center">
+        <button id="create-grammar" class="bg-blue-700 hover:bg-blue-800 text-white px-6 sm:px-8 py-3 rounded-full shadow-lg text-base sm:text-lg font-semibold transition-all">
+          + Neue Grammatik Tabelle erstellen
+        </button>
+      </div>
+      <!-- Modal für neue bzw. bearbeitete Grammatik Tabelle -->
+      <div id="grammar-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md relative">
+          <h2 class="text-xl sm:text-2xl font-bold text-blue-700 mb-4">Neue Grammatik Tabelle erstellen</h2>
+          <input type="text" id="grammar-table-name" placeholder="Tabellenname" class="border-2 border-blue-400 p-3 rounded-md w-full mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <div id="grammar-rows-container" class="space-y-2 mb-4">
+            <!-- Dynamisch hinzugefügte Zeilen erscheinen hier -->
+          </div>
+          <button id="add-grammar-row" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded mb-4">Zeile hinzufügen</button>
+          <div class="flex flex-col sm:flex-row justify-end gap-2">
+            <button id="close-grammar-modal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">Abbrechen</button>
+            <button id="save-grammar-table" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lern-/Editierbereich (wird innerhalb einer Aufgabe genutzt) -->
+    <section id="learn-container" class="hidden flex flex-col items-center justify-center mt-8"></section>
+    <div class="text-center mt-6">
+      <button id="back-button" class="hidden bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full text-base sm:text-lg transition-all">
+        Zurück
+      </button>
+    </div>
+  </main>
+
+  <script>
+    // Benutzerprüfung
+    const user_id = localStorage.getItem('user_id');
+    if (!user_id) window.location.href = "auth.html";
+    const API_HOST = "https://api.schoolnote.eu";
+
+    // Feedback-Overlay (richtig/falsch)
+    function showFeedbackOverlay(message, type) {
+      const overlay = document.createElement("div");
+      overlay.className = "fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-500";
+      overlay.style.backgroundColor = type === "correct" ? "rgba(0, 255, 0, 0.7)" : "rgba(255, 0, 0, 0.7)";
+      overlay.innerHTML = `<h1 class="text-6xl font-bold text-white">${message}</h1>`;
+      document.body.appendChild(overlay);
+      setTimeout(() => {
+        overlay.style.opacity = "0";
+        setTimeout(() => { overlay.remove(); }, 500);
+      }, 300);
+    }
+
+    /* ----------------- Allgemeine Variablen ----------------- */
+    // Elemente für Karteikarten
+    let groups = [];
+    const groupsContainer = document.getElementById("groups-container"),
+          createGroupButton = document.getElementById("create-group"),
+          groupModal = document.getElementById("group-modal"),
+          groupNameInput = document.getElementById("group-name"),
+          saveGroupButton = document.getElementById("save-group"),
+          closeModalButton = document.getElementById("close-modal");
+
+    // Elemente für Grammatik Tabellen
+    let grammarTables = [];
+    const grammarContainer = document.getElementById("grammar-container"),
+          createGrammarButton = document.getElementById("create-grammar"),
+          grammarModal = document.getElementById("grammar-modal"),
+          grammarTableNameInput = document.getElementById("grammar-table-name"),
+          grammarRowsContainer = document.getElementById("grammar-rows-container"),
+          addGrammarRowButton = document.getElementById("add-grammar-row"),
+          saveGrammarTableButton = document.getElementById("save-grammar-table"),
+          closeGrammarModalButton = document.getElementById("close-grammar-modal");
+
+    // Variable zum Merken, ob wir in den Bearbeitungsmodus gehen
+    let currentEditingGrammarTable = null;
+
+    // Elemente für Tab-Navigation & Aufgabenbereich
+    const tabNav = document.getElementById("tab-nav");
+    const tabCards = document.getElementById("tab-cards");
+    const tabGrammar = document.getElementById("tab-grammar");
+    const cardsSection = document.getElementById("cards-section");
+    const grammarSection = document.getElementById("grammar-section");
+    const learnContainer = document.getElementById("learn-container");
+    const backButton = document.getElementById("back-button");
+
+    // Tab-Buttons (nur aktiv, wenn keine Aufgabe läuft)
+    tabCards.addEventListener("click", () => {
+      tabCards.classList.add("bg-orange-600", "text-white");
+      tabCards.classList.remove("bg-gray-300", "text-gray-800");
+      tabGrammar.classList.add("bg-gray-300", "text-gray-800");
+      tabGrammar.classList.remove("bg-orange-600", "text-white");
+      cardsSection.classList.remove("hidden");
+      grammarSection.classList.add("hidden");
+      fetchGroups();
+    });
+
+    tabGrammar.addEventListener("click", () => {
+      tabGrammar.classList.add("bg-orange-600", "text-white");
+      tabGrammar.classList.remove("bg-gray-300", "text-gray-800");
+      tabCards.classList.add("bg-gray-300", "text-gray-800");
+      tabCards.classList.remove("bg-orange-600", "text-white");
+      grammarSection.classList.remove("hidden");
+      cardsSection.classList.add("hidden");
+      fetchGrammarTables();
+    });
+
+    /* ----------------- Funktionen für Karteikarten ----------------- */
+    const updateGroupsView = () => {
+      groupsContainer.innerHTML = "";
+      groups.forEach(group => {
+        const groupDiv = document.createElement("div");
+        groupDiv.className = "bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between";
+        const groupTitle = document.createElement("h2");
+        groupTitle.textContent = group.name;
+        groupTitle.className = "font-bold text-lg sm:text-xl mb-4 text-orange-600";
+        groupDiv.appendChild(groupTitle);
+        const buttonContainer = document.createElement("div");
+        buttonContainer.className = "flex flex-col sm:flex-row items-center justify-center gap-4 mt-4";
+        
+        const editButton = document.createElement("button");
+        editButton.textContent = "Bearbeiten";
+        editButton.className = "bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow transition-all";
+        editButton.addEventListener("click", () => startEditing(group));
+        buttonContainer.appendChild(editButton);
+        
+        const learnButton = document.createElement("button");
+        learnButton.textContent = "Lernen";
+        learnButton.className = "bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow transition-all";
+        learnButton.addEventListener("click", () => startLearning(group));
+        buttonContainer.appendChild(learnButton);
+        
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Löschen";
+        deleteButton.className = "bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow transition-all";
+        deleteButton.addEventListener("click", () => deleteGroup(group.id));
+        buttonContainer.appendChild(deleteButton);
+        
+        groupDiv.appendChild(buttonContainer);
+        groupsContainer.appendChild(groupDiv);
+      });
+    };
+
+    const fetchGroups = () => {
+      fetch(`${API_HOST}/groups?user_id=${user_id}`)
+        .then(response => response.json())
+        .then(data => { groups = data; updateGroupsView(); })
+        .catch(err => console.error("Error loading groups:", err));
+    };
+
+    saveGroupButton.addEventListener("click", () => {
+      const groupName = groupNameInput.value.trim();
+      if (!groupName) { alert("Bitte gib einen Namen für die Gruppe ein!"); return; }
+      fetch(`${API_HOST}/groups`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: groupName, user_id: user_id })
+      })
+      .then(response => response.json())
+      .then(data => { 
+        if (data.group_id) { 
+          closeGroupModal(); 
+          fetchGroups(); 
+        } else { 
+          alert(data.message || "Fehler beim Hinzufügen der Gruppe."); 
+        } 
+      })
+      .catch(err => console.error("Error adding group:", err));
+    });
+
+    const deleteGroup = (groupId) => {
+      fetch(`${API_HOST}/groups/${groupId}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(() => fetchGroups())
+        .catch(err => console.error("Error deleting group:", err));
+    };
+
+    const closeGroupModal = () => { 
+      groupModal.classList.add("hidden"); 
+      groupNameInput.value = ""; 
+    };
+    createGroupButton.addEventListener("click", () => groupModal.classList.remove("hidden"));
+    closeModalButton.addEventListener("click", closeGroupModal);
+
+    // Karten abrufen
+    const fetchCards = (groupId) => {
+      return fetch(`${API_HOST}/cards?group_id=${groupId}`).then(response => response.json());
+    };
+
+    /* ----------------- UI an/ausblenden während einer Aufgabe ----------------- */
+    const hideTaskUI = () => {
+      tabNav.classList.add("hidden");
+      cardsSection.classList.add("hidden");
+      grammarSection.classList.add("hidden");
+      createGroupButton.classList.add("hidden");
+      if(createGrammarButton) createGrammarButton.classList.add("hidden");
+    };
+
+    const showTaskUI = () => {
+      tabNav.classList.remove("hidden");
+      createGroupButton.classList.remove("hidden");
+      if(createGrammarButton) createGrammarButton.classList.remove("hidden");
+    };
+
+    // Beim Bearbeiten einer Gruppe
+    const startEditing = (group) => {
+      fetchCards(group.id)
+      .then(cards => {
+        hideTaskUI();
+        learnContainer.classList.remove("hidden");
+        groupsContainer.classList.add("hidden");
+        backButton.classList.remove("hidden");
+        learnContainer.innerHTML = `
+          <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-3xl mx-auto">
+            <h2 class="text-xl sm:text-2xl font-bold mb-4 text-orange-600">Bearbeiten: ${group.name}</h2>
+            <div id="card-list" class="space-y-4 mb-6">
+              ${cards.map(card => `
+                <div class="bg-gray-50 p-4 rounded-lg shadow flex flex-col sm:flex-row justify-between items-center">
+                  <div>
+                    <p class="font-semibold">Vorderseite:</p>
+                    <p>${card.front}</p>
+                    <p class="font-semibold mt-2">Rückseite:</p>
+                    <p>${card.back}</p>
+                  </div>
+                  <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded mt-2 sm:mt-0" onclick="deleteCard(${card.id}, ${group.id})">Löschen</button>
+                </div>
+              `).join("")}
+            </div>
+            <div class="space-y-4">
+              <input id="new-card-front" type="text" placeholder="Vorderseite der Karte" class="border p-3 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <input id="new-card-back" type="text" placeholder="Rückseite der Karte" class="border p-3 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <button id="add-card" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded w-full">Karte hinzufügen</button>
+            </div>
+          </div>
+        `;
+        document.getElementById("add-card").addEventListener("click", () => {
+          const front = document.getElementById("new-card-front").value.trim();
+          const back = document.getElementById("new-card-back").value.trim();
+          if (!front || !back) { alert("Bitte beide Seiten der Karte ausfüllen!"); return; }
+          fetch(`${API_HOST}/cards`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ front, back, group_id: group.id, user_id: user_id })
+          })
+          .then(response => response.json())
+          .then(data => { 
+            if (data.card_id) { 
+              startEditing(group); 
+            } else { 
+              alert(data.message || "Fehler beim Hinzufügen der Karte."); 
+            } 
+          })
+          .catch(err => console.error("Error adding card:", err));
+        });
+      })
+      .catch(err => console.error("Error loading cards:", err));
+    };
+
+    const deleteCard = (cardId, groupId) => {
+      fetch(`${API_HOST}/cards/${cardId}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(() => {
+          const group = groups.find(g => g.id == groupId);
+          if (group) startEditing(group);
+        })
+        .catch(err => console.error("Error deleting card:", err));
+    };
+
+    /* ----------------- Lernen mit animiertem Kartenflip ----------------- */
+    const startLearning = (group) => {
+      fetchCards(group.id)
+      .then(cards => {
+        if (!cards || cards.length === 0) { alert("Keine Karten in dieser Gruppe zum Lernen!"); return; }
+        const totalCards = cards.length;
+        let currentIndex = 0, correctCount = 0, reviewCards = [];
+        hideTaskUI();
+        learnContainer.classList.remove("hidden");
+        groupsContainer.classList.add("hidden");
+        backButton.classList.remove("hidden");
+
+        const renderCard = () => {
+          if (currentIndex >= cards.length) {
+            if (reviewCards.length > 0) {
+              cards = reviewCards.slice();
+              reviewCards = [];
+              currentIndex = 0;
+            } else {
+              learnContainer.innerHTML = `
+                <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md mx-auto text-center">
+                  <h2 class="text-xl sm:text-2xl font-bold mb-4 text-orange-700">Du hast gut gelernt!</h2>
+                  <p class="mb-4">Ergebnis: ${((correctCount / totalCards)*100).toFixed(2)}% richtig</p>
+                  <button id="back-to-groups" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-base sm:text-lg transition-colors">
+                    Zurück zur Startseite
+                  </button>
+                </div>
+              `;
+              document.getElementById("back-to-groups").addEventListener("click", () => {
+                learnContainer.classList.add("hidden");
+                groupsContainer.classList.remove("hidden");
+                backButton.classList.add("hidden");
+                // Zurücksetzen: Karteikarten-Tab aktivieren
+                tabCards.classList.add("bg-orange-600", "text-white");
+                tabCards.classList.remove("bg-gray-300", "text-gray-800");
+                tabGrammar.classList.add("bg-gray-300", "text-gray-800");
+                tabGrammar.classList.remove("bg-orange-600", "text-white");
+                cardsSection.classList.remove("hidden");
+                grammarSection.classList.add("hidden");
+                showTaskUI();
+              });
+              return;
+            }
+          }
+          learnContainer.innerHTML = `
+            <div id="flip-card" class="flip-card bg-white rounded-lg shadow-lg w-full max-w-md mx-auto h-64">
+              <div class="flip-card-inner h-full">
+                <div id="card-front" class="flip-card-front text-2xl sm:text-3xl font-bold text-orange-700">
+                  ${cards[currentIndex].front}
+                </div>
+                <div id="card-back" class="flip-card-back text-2xl sm:text-3xl font-bold text-orange-700">
+                  ${cards[currentIndex].back}
+                </div>
+              </div>
+            </div>
+            <button id="flip-button" class="mt-4 w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg text-lg sm:text-xl font-medium transition-colors">
+              Karte umdrehen
+            </button>
+            <div class="flex flex-col sm:flex-row justify-around gap-2 mt-4">
+              <button id="not-known" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-base sm:text-lg transition-colors">
+                Nicht gekonnt
+              </button>
+              <button id="known" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-base sm:text-lg transition-colors">
+                Gekonnt
+              </button>
+            </div>
+          `;
+          const flipCard = document.getElementById("flip-card");
+          if (flipCard) flipCard.classList.remove("flipped");
+
+          document.getElementById("flip-button").addEventListener("click", () => {
+            if (flipCard) {
+              flipCard.classList.toggle("flipped");
+            }
+          });
+          document.getElementById("known").addEventListener("click", () => {
+            showFeedbackOverlay("Richtig!", "correct");
+            correctCount++;
+            currentIndex++;
+            setTimeout(() => { renderCard(); }, 800);
+          });
+          document.getElementById("not-known").addEventListener("click", () => {
+            showFeedbackOverlay("Falsch!", "wrong");
+            reviewCards.push(cards[currentIndex]);
+            currentIndex++;
+            setTimeout(() => { renderCard(); }, 800);
+          });
+        };
+        renderCard();
+      })
+      .catch(err => console.error("Error loading cards:", err));
+    };
+
+    // Angepasst: Beim Klick auf „Zurück“ (egal ob aus Lernsitzung oder Bearbeitung)
+    backButton.addEventListener("click", () => {
+      learnContainer.classList.add("hidden");
+      groupsContainer.classList.remove("hidden");
+      backButton.classList.add("hidden");
+      // Setze den Tab auf Karteikarten
+      tabCards.classList.add("bg-orange-600", "text-white");
+      tabCards.classList.remove("bg-gray-300", "text-gray-800");
+      tabGrammar.classList.add("bg-gray-300", "text-gray-800");
+      tabGrammar.classList.remove("bg-orange-600", "text-white");
+      cardsSection.classList.remove("hidden");
+      grammarSection.classList.add("hidden");
+      showTaskUI();
+    });
+
+    /* ----------------- Funktionen für Grammatik Tabellen ----------------- */
+    const updateGrammarTablesView = () => {
+      grammarContainer.innerHTML = "";
+      grammarTables.forEach(table => {
+        const tableDiv = document.createElement("div");
+        tableDiv.className = "bg-white p-6 rounded-lg shadow-lg";
+        const title = document.createElement("h2");
+        title.textContent = table.name;
+        title.className = "font-bold text-lg sm:text-xl mb-4 text-blue-700";
+        tableDiv.appendChild(title);
+        if(table.rows && table.rows.length){
+          let htmlTable = '<table class="w-full border-collapse">';
+          htmlTable += '<thead><tr><th class="border p-2 bg-blue-100">Regel</th><th class="border p-2 bg-blue-100">Erklärung</th></tr></thead>';
+          htmlTable += '<tbody>';
+          table.rows.forEach(row => {
+            htmlTable += `<tr><td class="border p-2">${row.left}</td><td class="border p-2">${row.right}</td></tr>`;
+          });
+          htmlTable += '</tbody></table>';
+          tableDiv.innerHTML += htmlTable;
+        }
+        const btnContainer = document.createElement("div");
+        btnContainer.className = "flex justify-end gap-2 mt-4";
+        
+        // Neuer Bearbeiten-Button für Grammatik-Tabellen
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Bearbeiten";
+        editBtn.className = "bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors";
+        editBtn.addEventListener("click", () => startEditingGrammar(table));
+        btnContainer.appendChild(editBtn);
+        
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Löschen";
+        deleteBtn.className = "bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors";
+        deleteBtn.addEventListener("click", () => deleteGrammarTable(table.id));
+        btnContainer.appendChild(deleteBtn);
+        
+        tableDiv.appendChild(btnContainer);
+        grammarContainer.appendChild(tableDiv);
+      });
+    };
+
+    const fetchGrammarTables = () => {
+      fetch(`${API_HOST}/grammarTables?user_id=${user_id}`)
+        .then(response => response.json())
+        .then(data => { grammarTables = data; updateGrammarTablesView(); })
+        .catch(err => console.error("Error loading grammar tables:", err));
+    };
+
+    // Erzeugt ein neues Zeilen-Element für die Grammatik Tabelle (wird im Erstellmodus genutzt)
+    const createGrammarRowElement = () => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "flex gap-2";
+      const leftInput = document.createElement("input");
+      leftInput.type = "text";
+      leftInput.placeholder = "Regel";
+      leftInput.className = "border p-2 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500";
+      const rightInput = document.createElement("input");
+      rightInput.type = "text";
+      rightInput.placeholder = "Erklärung";
+      rightInput.className = "border p-2 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500";
+      // Im Erstellmodus kann der Nutzer Zeilen auch wieder entfernen – im Bearbeitungsmodus bleibt der X-Button verborgen
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "×";
+      removeBtn.className = "bg-red-500 text-white rounded px-2";
+      removeBtn.addEventListener("click", () => rowDiv.remove());
+      rowDiv.appendChild(leftInput);
+      rowDiv.appendChild(rightInput);
+      rowDiv.appendChild(removeBtn);
+      return rowDiv;
+    };
+
+    addGrammarRowButton.addEventListener("click", () => {
+      const rowElement = createGrammarRowElement();
+      grammarRowsContainer.appendChild(rowElement);
+    });
+
+    // Wird sowohl im Erstell- als auch im Bearbeitungsmodus genutzt
+    saveGrammarTableButton.addEventListener("click", () => {
+      const tableName = grammarTableNameInput.value.trim();
+      if (!tableName) { alert("Bitte gib einen Namen für die Tabelle ein!"); return; }
+      const rows = [];
+      grammarRowsContainer.querySelectorAll("div").forEach(rowDiv => {
+        const inputs = rowDiv.querySelectorAll("input");
+        const left = inputs[0].value.trim();
+        const right = inputs[1].value.trim();
+        if(left && right) rows.push({ left, right });
+      });
+      if(rows.length === 0) { alert("Bitte füge mindestens eine Zeile hinzu!"); return; }
+      
+      if(currentEditingGrammarTable) {
+        // Update (Bearbeiten)
+        fetch(`${API_HOST}/grammarTables/${currentEditingGrammarTable.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: tableName, rows, user_id })
+        })
+        .then(response => response.json())
+        .then(data => { 
+          if (data.table_id || data.success) { 
+            closeGrammarModal(); 
+            currentEditingGrammarTable = null;
+            fetchGrammarTables(); 
+          } else { 
+            alert(data.message || "Fehler beim Aktualisieren der Grammatik Tabelle."); 
+          }
+        })
+        .catch(err => console.error("Error updating grammar table:", err));
+      } else {
+        // Neuanlage
+        fetch(`${API_HOST}/grammarTables`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: tableName, rows, user_id })
+        })
+        .then(response => response.json())
+        .then(data => { 
+          if (data.table_id) { 
+            closeGrammarModal(); 
+            fetchGrammarTables(); 
+          } else { 
+            alert(data.message || "Fehler beim Hinzufügen der Grammatik Tabelle."); 
+          }
+        })
+        .catch(err => console.error("Error adding grammar table:", err));
+      }
+    });
+
+    const deleteGrammarTable = (tableId) => {
+      fetch(`${API_HOST}/grammarTables/${tableId}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(() => fetchGrammarTables())
+        .catch(err => console.error("Error deleting grammar table:", err));
+    };
+
+    const closeGrammarModal = () => {
+      grammarModal.classList.add("hidden");
+      grammarTableNameInput.value = "";
+      grammarRowsContainer.innerHTML = "";
+      currentEditingGrammarTable = null;
+    };
+    createGrammarButton.addEventListener("click", () => {
+      currentEditingGrammarTable = null; // Sicherstellen, dass im Erstellmodus gearbeitet wird
+      grammarModal.classList.remove("hidden");
+    });
+    closeGrammarModalButton.addEventListener("click", closeGrammarModal);
+
+    // Beim Bearbeiten einer Grammatik Tabelle: Popup mit vorhandenen Daten füllen
+    const startEditingGrammar = (table) => {
+      currentEditingGrammarTable = table;
+      grammarModal.classList.remove("hidden");
+      grammarTableNameInput.value = table.name;
+      grammarRowsContainer.innerHTML = "";
+      if(table.rows && table.rows.length) {
+        table.rows.forEach(row => {
+          const rowDiv = document.createElement("div");
+          rowDiv.className = "flex gap-2";
+          const leftInput = document.createElement("input");
+          leftInput.type = "text";
+          leftInput.value = row.left;
+          leftInput.placeholder = "Regel";
+          leftInput.className = "border p-2 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500";
+          const rightInput = document.createElement("input");
+          rightInput.type = "text";
+          rightInput.value = row.right;
+          rightInput.placeholder = "Erklärung";
+          rightInput.className = "border p-2 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500";
+          // Hinweis: Im Bearbeitungsmodus wird der X-Button nicht hinzugefügt.
+          rowDiv.appendChild(leftInput);
+          rowDiv.appendChild(rightInput);
+          grammarRowsContainer.appendChild(rowDiv);
+        });
+      }
+    };
+
+    // Initiale Ladeaufrufe – Standardmäßig Karteikarten anzeigen
+    fetchGroups();
+  </script>
+</body>
+</html>

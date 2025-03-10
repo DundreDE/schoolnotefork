@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notenrechner & Hausaufgaben</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="schoolnote.jpg" type="image/x-icon">
+</head>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="tailwind.cofig.js"></script>
+<body class="bg-orange-100 text-gray-900">
+  <div id="navbar-container"></div>
+  <div class="container mx-auto p-4 md:p-6 lg:p-8">
+    <h1 class="text-3xl md:text-4xl font-bold text-center text-orange-600 mb-6">Notenrechner</h1>
+
+    <div class="mb-6 bg-white p-4 rounded shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4 text-orange-600">Note hinzufügen</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <select id="fachSelect" class="p-3 border border-orange-300 rounded w-full focus:outline-none focus:ring-2 focus:ring-orange-500"></select>
+        <select id="noteValue" class="p-3 border border-orange-300 rounded w-full focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="1+">1+</option>
+          <option value="1">1</option>
+          <option value="1-">1-</option>
+          <option value="2+">2+</option>
+          <option value="2">2</option>
+          <option value="2-">2-</option>
+          <option value="3+">3+</option>
+          <option value="3">3</option>
+          <option value="3-">3-</option>
+          <option value="4+">4+</option>
+          <option value="4">4</option>
+          <option value="4-">4-</option>
+          <option value="5+">5+</option>
+          <option value="5">5</option>
+          <option value="5-">5-</option>
+          <option value="6+">6+</option>
+          <option value="6">6</option>
+          <option value="6-">6-</option>
+        </select>
+        <select id="artSelect" class="p-3 border border-orange-300 rounded w-full focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="Klassenarbeit">Klassenarbeit</option>
+          <option value="HÜ">HÜ</option>
+          <option value="Epo">Epo</option>
+        </select>
+        <button onclick="addNote()" class="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded w-full">Note hinzufügen</button>
+      </div>
+    </div>
+
+    <div id="faecherContainer" class="space-y-4"></div>
+    
+    <div class="text-right mt-4">
+      <button onclick="toggleBearbeiten()" id="bearbeitenButton" class="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded">
+        Bearbeiten
+      </button>
+    </div>
+    
+    <div id="fachEditSection" class="mt-6 hidden bg-white p-4 rounded shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4 text-orange-600">Fächer bearbeiten</h2>
+      <div class="flex space-x-2 mb-4">
+        <input id="fachName" type="text" placeholder="Fachname" class="p-3 border border-orange-300 rounded w-full focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <button onclick="addFach()" class="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded">Hinzufügen</button>
+      </div>
+      <div id="faecherListe" class="space-y-2"></div>
+    </div>
+  </div>
+  
+  <!-- Skripte -->
+  <script>
+    // Nutzer-Authentifizierung (Beispiel)
+    const user_id = localStorage.getItem('user_id');
+    if (!user_id) {
+      window.location.href = "auth.html";
+    }
+    
+    let faecher = [];
+    let bearbeitenModus = false;
+    
+    const gewichtungen = {
+      'Klassenarbeit': 3,
+      'HÜ': 1,
+      'Epo': 2
+    };
+    const notenWerte = {
+      '1+': 0.66,
+      '1': 1.0,
+      '1-': 1.33,
+      '2+': 1.66,
+      '2': 2.0,
+      '2-': 2.33,
+      '3+': 2.66,
+      '3': 3.0,
+      '3-': 3.33,
+      '4+': 3.66,
+      '4': 4.0,
+      '4-': 4.33,
+      '5+': 4.66,
+      '5': 5.0,
+      '5-': 5.33,
+      '6+': 5.66,
+      '6': 6.0,
+      '6-': 6.33
+    };
+
+    // Fächer und zugehörige Noten laden
+    function fetchFaecher() {
+      fetch(`https://api.schoolnote.eu/faecher?user_id=${user_id}`)
+        .then(response => response.json())
+        .then(data => {
+          faecher = data;
+          // Für jedes Fach die Noten laden
+          let promises = faecher.map(fach => {
+            return fetch(`https://api.schoolnote.eu/noten?fach_id=${fach.id}`)
+              .then(response => response.json())
+              .then(notes => {
+                fach.noten = notes.map(note => ({
+                  id: note.id,
+                  note: note.note,
+                  art: note.art
+                }));
+              });
+          });
+          Promise.all(promises).then(() => {
+            updateFachDropdownAndContainer();
+            if (bearbeitenModus) {
+              updateFaecherListe();
+            }
+          });
+        })
+        .catch(err => console.error("Fehler beim Laden der Fächer:", err));
+    }
+
+    // Fach zu Dropdown und Container hinzufügen
+    function updateFachDropdownAndContainer() {
+      renderFachDropdown();
+      renderFaecherContainer();
+    }
+
+    function renderFachDropdown() {
+      const fachSelect = document.getElementById('fachSelect');
+      fachSelect.innerHTML = '';
+      faecher.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+             .forEach((fach, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = fach.name;
+        fachSelect.appendChild(option);
+      });
+    }
+
+    // Angepasste Funktion zur Darstellung der Fächer inkl. Noten in einer Tabelle
+    function renderFaecherContainer() {
+      const container = document.getElementById('faecherContainer');
+      container.innerHTML = '';
+      faecher.forEach((fach, fachIndex) => {
+        const fachCard = document.createElement('div');
+        fachCard.className = 'bg-white p-4 mb-4 shadow rounded';
+        
+        // Kopfzeile mit dem Fachnamen
+        const header = document.createElement('div');
+        header.className = 'flex justify-between items-center mb-4';
+        const title = document.createElement('h3');
+        title.className = 'text-xl font-semibold text-orange-600';
+        title.textContent = fach.name;
+        header.appendChild(title);
+        fachCard.appendChild(header);
+
+        // Noten anzeigen
+        if (fach.noten && fach.noten.length > 0) {
+          const notenTable = document.createElement('table');
+          notenTable.className = 'w-full mb-4';
+          
+          // Tabellenkopf
+          const thead = document.createElement('thead');
+          const headerRow = document.createElement('tr');
+          ['Note', 'Art', 'Aktion'].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            th.className = 'border px-2 py-1';
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+          notenTable.appendChild(thead);
+          
+          // Tabellenkörper
+          const tbody = document.createElement('tbody');
+          fach.noten.forEach((note, noteIndex) => {
+            const row = document.createElement('tr');
+            
+            const noteCell = document.createElement('td');
+            noteCell.textContent = note.note;
+            noteCell.className = 'border px-2 py-1';
+            row.appendChild(noteCell);
+            
+            const artCell = document.createElement('td');
+            artCell.textContent = note.art;
+            artCell.className = 'border px-2 py-1';
+            row.appendChild(artCell);
+            
+            const actionCell = document.createElement('td');
+            actionCell.className = 'border px-2 py-1';
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Löschen';
+            deleteButton.className = 'bg-red-500 hover:bg-red-600 text-white p-1 rounded';
+            deleteButton.onclick = () => deleteNote(fachIndex, noteIndex);
+            actionCell.appendChild(deleteButton);
+            row.appendChild(actionCell);
+            
+            tbody.appendChild(row);
+          });
+          notenTable.appendChild(tbody);
+          fachCard.appendChild(notenTable);
+        } else {
+          const noNotes = document.createElement('p');
+          noNotes.className = 'text-gray-600 mb-4';
+          noNotes.textContent = 'Keine Noten vorhanden.';
+          fachCard.appendChild(noNotes);
+        }
+        
+        // Durchschnitt anzeigen
+        const average = document.createElement('p');
+        average.className = 'text-xl font-semibold';
+        average.textContent = `Durchschnitt: ${calculateAverage(fach.noten)}`;
+        fachCard.appendChild(average);
+        
+        container.appendChild(fachCard);
+      });
+    }
+
+    // Durchschnittsberechnung
+    function calculateAverage(noten) {
+      if (!noten || noten.length === 0) return 'N/A';
+      let total = 0;
+      let totalGewichtung = 0;
+      noten.forEach(note => {
+        const noteWert = notenWerte[note.note];
+        const gewichtung = gewichtungen[note.art] || 1;
+        total += noteWert * gewichtung;
+        totalGewichtung += gewichtung;
+      });
+      const average = total / totalGewichtung;
+      let noteDisplay = 'N/A';
+      if (average < 1.0) {
+        noteDisplay = '1+';
+      } else if (average < 1.34) {
+        noteDisplay = '1';
+      } else if (average < 1.67) {
+        noteDisplay = '1-';
+      } else if (average < 2.0) {
+        noteDisplay = '2+';
+      } else if (average < 2.34) {
+        noteDisplay = '2';
+      } else if (average < 2.67) {
+        noteDisplay = '2-';
+      } else if (average < 3.0) {
+        noteDisplay = '3+';
+      } else if (average < 3.34) {
+        noteDisplay = '3';
+      } else if (average < 3.67) {
+        noteDisplay = '3-';
+      } else if (average < 4.0) {
+        noteDisplay = '4+';
+      } else if (average < 4.34) {
+        noteDisplay = '4';
+      } else if (average < 4.67) {
+        noteDisplay = '4-';
+      } else if (average < 5.0) {
+        noteDisplay = '5+';
+      } else if (average < 5.34) {
+        noteDisplay = '5';
+      } else if (average < 5.67) {
+        noteDisplay = '5-';
+      } else if (average < 6.0) {
+        noteDisplay = '6+';
+      } else if (average < 6.34) {
+        noteDisplay = '6';
+      } else {
+        noteDisplay = '6-';
+      }
+      return `${noteDisplay} (${average.toFixed(2)})`;
+    }
+
+    // Note hinzufügen
+    function addNote() {
+      const fachSelect = document.getElementById('fachSelect');
+      const fachIndex = fachSelect.value;
+      const noteValue = document.getElementById('noteValue').value;
+      const art = document.getElementById('artSelect').value;
+      if (fachIndex !== '' && noteValue && art) {
+        const fach = faecher[fachIndex];
+        if (fach && fach.id) {
+          fetch('https://api.schoolnote.eu/noten', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              note: noteValue,
+              art: art,
+              fach_id: fach.id,
+              user_id: user_id
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.note_id) {
+              fetchFaecher();
+            } else {
+              alert(data.message || "Fehler beim Hinzufügen der Note.");
+            }
+          })
+          .catch(err => console.error("Fehler beim Hinzufügen der Note:", err));
+        } else {
+          alert("Ungültiges Fach.");
+        }
+      } else {
+        alert('Bitte wählen Sie ein Fach und geben Sie eine gültige Note und Art an.');
+      }
+    }
+
+    // Fach hinzufügen
+    function addFach() {
+      const fachNameInput = document.getElementById('fachName');
+      const fachName = fachNameInput.value.trim();
+      if (fachName) {
+        fetch('https://api.schoolnote.eu/faecher', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: fachName, user_id: user_id })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.fach_id) {
+            fetchFaecher();
+            fachNameInput.value = '';
+          } else {
+            alert(data.message || "Fehler beim Hinzufügen des Fachs.");
+          }
+        })
+        .catch(err => console.error("Fehler beim Hinzufügen des Fachs:", err));
+      } else {
+        alert('Bitte geben Sie einen gültigen Fachnamen ein.');
+      }
+    }
+
+    // Fach löschen
+    function deleteFach(fachId) {
+      if (confirm("Möchtest du dieses Fach wirklich löschen? Dadurch werden auch alle zugehörigen Daten entfernt.")) {
+        fetch(`https://api.schoolnote.eu/faecher/${fachId}`, {
+          method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => fetchFaecher())
+        .catch(err => console.error("Fehler beim Löschen des Fachs:", err));
+      }
+    }
+
+    // Note löschen
+    function deleteNote(fachIndex, noteIndex) {
+      const fach = faecher[fachIndex];
+      if (fach && fach.noten && fach.noten[noteIndex]) {
+        const note = fach.noten[noteIndex];
+        if (note.id) {
+          fetch(`https://api.schoolnote.eu/noten/${note.id}`, {
+            method: 'DELETE'
+          })
+          .then(response => response.json())
+          .then(data => fetchFaecher())
+          .catch(err => console.error("Fehler beim Löschen der Note:", err));
+        }
+      }
+    }
+
+    // Bearbeitungsmodus umschalten
+    function toggleBearbeiten() {
+      bearbeitenModus = !bearbeitenModus;
+      const fachEditSection = document.getElementById("fachEditSection");
+      fachEditSection.classList.toggle("hidden", !bearbeitenModus);
+      const bearbeitenButton = document.getElementById("bearbeitenButton");
+      bearbeitenButton.textContent = bearbeitenModus ? "Fertig" : "Bearbeiten";
+      if (bearbeitenModus) updateFaecherListe();
+    }
+    
+    function updateFaecherListe() {
+      const liste = document.getElementById("faecherListe");
+      liste.innerHTML = "";
+      faecher.forEach(fach => {
+        const div = document.createElement("div");
+        div.className = "flex justify-between items-center p-2 border-b";
+        div.innerHTML = `<span class="text-lg">${fach.name}</span>
+                         <button onclick="deleteFach(${fach.id})" class="bg-red-500 hover:bg-red-600 text-white p-1 rounded">
+                            Löschen
+                         </button>`;
+        liste.appendChild(div);
+      });
+    }
+
+    // Navbar laden und initialisieren
+    function loadNavbar() {
+      fetch('navbar.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('navbar-container').innerHTML = html;
+          initNavbar();
+        })
+        .catch(error => console.error('Fehler beim Laden der Navbar:', error));
+    }
+    
+    function initNavbar() {
+      // Beispiel: Mobile Menü Toggle
+      const navToggle = document.getElementById('nav-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (navToggle && mobileMenu) {
+        navToggle.addEventListener('click', function(event) {
+          event.preventDefault();
+          mobileMenu.classList.toggle('hidden');
+          const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+          navToggle.setAttribute('aria-expanded', !expanded);
+          navToggle.classList.toggle('bg-orange-700');
+        });
+      }
+      // Weitere Navbar-Funktionen...
+    }
+
+    // Beim Laden der Seite
+    document.addEventListener("DOMContentLoaded", () => {
+      loadNavbar();
+      fetchFaecher();
+    });
+  </script>
+</body>
+</html>

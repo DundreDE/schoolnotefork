@@ -1,0 +1,79 @@
+
+<style>
+  @font-face {
+      font-family: 'Cubic';
+      src: url('cubic.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+  }
+
+  .font-cubic {
+      font-family: 'Cubic', sans-serif;
+  }
+</style>
+
+
+<nav class="bg-orange-600 text-white rounded-b-lg relative z-20">
+  <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="text-2xl font-bold font-cubic">SN</a>
+
+    <!-- Toggle-Button nur für kleine Bildschirme -->
+    <button id="nav-toggle" class="sm:hidden p-2 focus:outline-none z-30" aria-label="Toggle navigation menu">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+    <!-- Desktop Menü -->
+    <ul id="nav-menu" class="hidden sm:flex space-x-6">
+      <li><a href="index.html" class="hover:underline">Startseite</a></li>
+      <li><a href="stundenplan.html" class="hover:underline">Stundenplan</a></li>
+      <li><a href="karteikarten.html" class="hover:underline">Karteikarten lernen</a></li>
+      <li><a href="hausaufgaben.html" class="hover:underline">Hausaufgaben</a></li>
+      <li><a href="notenrechner.html" class="hover:underline">Notenrechner</a></li>
+      <li class="relative group">
+        <a href="#" class="hover:underline flex items-center">
+          Mehr
+          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </a>
+        <div class="absolute hidden group-hover:block bg-orange-600 rounded-md shadow-lg p-2 z-30 right-0">
+          <ul class="space-y-2">
+            <li><a href="Impressum.html" class="hover:underline block px-2 py-1">Impressum</a></li>
+            <li><a href="Datenschutz.html" class="hover:underline block px-2 py-1">Datenschutz</a></li>
+            <li><a href="auth.html" class="hover:underline block px-2 py-1">Login</a></li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Mobile Menü als Dropdown unterhalb der Navbar (überlagert nur den Navbar-Bereich) -->
+  <div id="mobile-menu" class="sm:hidden hidden absolute top-full left-0 right-0 bg-orange-600 text-white transition-opacity duration-300 z-10">
+    <div class="container mx-auto px-4 py-3">
+      <ul class="space-y-4">
+        <li><a href="index.html" class="hover:underline text-xl">Startseite</a></li>
+        <li><a href="stundenplan.html" class="hover:underline text-xl">Stundenplan</a></li>
+        <li><a href="karteikarten.html" class="hover:underline text-xl">Karteikarten lernen</a></li>
+        <li><a href="hausaufgaben.html" class="hover:underline text-xl">Hausaufgaben</a></li>
+        <li><a href="notenrechner.html" class="hover:underline text-xl">Notenrechner</a></li>
+        <li>
+          <button id="mobile-more-toggle" class="flex items-center w-full text-left hover:underline text-xl">
+            Mehr
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          <ul id="mobile-more-menu" class="hidden pl-4 mt-2 space-y-2">
+            <li><a href="Impressum.html" class="hover:underline">Impressum</a></li>
+            <li><a href="Datenschutz.html" class="hover:underline">Datenschutz</a></li>
+            <li><a href="auth.html" class="hover:underline">Login</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

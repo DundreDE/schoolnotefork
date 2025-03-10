@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rechtschreibtrainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="tailwind.cofig.js"></script>
+<body class="bg-orange-100 text-gray-900">
+    <div class="container mx-auto p-6">
+        <h1 class="text-4xl font-bold text-center text-orange-600 mb-8">Rechtschreibtrainer</h1>
+
+        <!-- Level Auswahl -->
+        <div class="mb-8 bg-white p-4 rounded shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-orange-600">Wähle ein Level</h2>
+            <div class="flex justify-center space-x-4">
+                <button onclick="startLevel(1)" class="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded">Level 1</button>
+                <button onclick="startLevel(2)" class="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded">Level 2</button>
+                <button onclick="startLevel(3)" class="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded">Level 3</button>
+            </div>
+        </div>
+
+        <!-- Rechtschreibtrainer -->
+        <div id="trainerContainer" class="mb-8 bg-white p-4 rounded shadow-lg hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-orange-600">Schreibe das Wort korrekt</h2>
+            <p id="wordToSpell" class="text-xl text-gray-800 mb-4"></p>
+            <input id="userInput" type="text" placeholder="Dein Wort" class="p-3 border border-orange-300 rounded w-full focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4" disabled>
+            <button onclick="checkSpelling()" class="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded w-full" id="checkButton" disabled>Überprüfen</button>
+            <p id="resultMessage" class="text-lg mt-4"></p>
+        </div>
+    </div>
+
+    <script>
+        // Wörter für Level 1, 2 und 3
+        const words = {
+            1: [
+                "Apfel", "Banane", "Hund", "Katze", "Haus", "Auto", "Baum", "Schule", "Ball", "Buch", "Tisch", "Stuhl", 
+                "Vogel", "Fisch", "Garten", "Sonne", "Mond", "Stern", "Fluss", "Berg", "Wald", "Blume", "Gras", "Himmel",
+                "Wasser", "Milch", "Brot", "Käse", "Ei", "Butter", "Honig", "Zucker", "Salz", "Tee", "Kaffee", "Saft", 
+                "Pizza", "Suppe", "Nudeln", "Reis", "Kuchen", "Kirsch", "Birne", "Tomate", "Kartoffel", "Mais", "Nuss",
+                "Pflaume", "Schaf", "Gans", "Maus", "Frosch", "Biene", "Libelle", "Hai", "Zebra", "Fels", "Gletscher", 
+                "Stein", "Sand", "Holz", "Glas", "Kiesel", "Feder", "Papagei", "Pelikan", "Möwe", "Tropenhaus", "Park"
+            ],
+            2: [
+                "Bibliothek", "Schmetterling", "Känguru", "Elefant", "Dinosaurier", "Telefonzelle", "Rakete", "Astronaut", 
+                "Universum", "Galaxie", "Schwarzes Loch", "Quantenmechanik", "Relativitätstheorie", "Renaissance", "Barock",
+                "Avantgarde", "Grafiker", "Videograf", "Produzent", "Theater", "Operette", "Schauspieler", "Ballett", "Breakdance",
+                "Trompeter", "Klarinettist", "Perkussionist", "Techniker", "Sounddesigner", "Animationsfilm", "Musiker", "Blues", 
+                "Jazz", "Elektronische Musik", "Virtual Reality", "Deep Learning", "Big Data", "Agile", "Frontend", "Backend",
+                "Programmierung", "Archäologie", "Experiment", "Neuronale Netze", "Datenanalyse", "Physik", "Forschung", 
+                "Betriebssystem", "Container", "Virtualisierung", "Datenbanken", "Webentwicklung", "Projektmanagement", 
+                "Design Thinking", "Storytelling", "Statistik", "Wissenschaft", "Prototyping", "Diagramm", "Labor", "Biologie"
+            ],
+            3: [
+                "Echolot", "Algorithmus", "Kybernetik", "Oszilloskop", "Frequenzumrichter", "Thermodynamik", "Photoelektrischer Effekt",
+                "Superposition", "Transzendenz", "Kohärenz", "Quantenverschränkung", "Antimaterie", "Elementarteilchen", 
+                "Protonenbeschleuniger", "Holographie", "Nanotechnologie", "Plasmaphysik", "Gravitationswellen", "Relativität",
+                "Stringtheorie", "Dunkle Materie", "Supernova", "Event Horizon", "Spektrometer", "Radioaktivität", "Neutrino", 
+                "Photon", "Bose-Einstein-Kondensat", "Supraleitung", "Quark", "Tachyon", "Kosmologie", "Quantenfluktuation", 
+                "Elektronenmikroskopie", "Metamaterial", "Tunneling-Effekt", "Quantenteleportation", "Kryotechnik", "Monopole",
+                "Fermion", "Hadron", "Hyperraum", "Multiversum", "Photonenstrahl", "Schwarzkörperstrahlung", "Wellenfunktion",
+                "Laserinterferometrie", "Spiegelung", "Polarisation", "Elektronische Wechselwirkung", "Spin", "Isotop", 
+                "Radiofrequenz", "Absorption", "Diffusion", "Annihilation", "Teilchenbeschleuniger", "Ionisation", 
+                "Elektronische Leitfähigkeit", "Neutronenstrahlung", "Energieerhaltung", "Superfluid", "Planck-Zeit"
+            ]
+        };
+
+        let currentWord = "";
+        let currentLevel = 1;
+
+        // Funktion zum Starten des Levels
+        function startLevel(level) {
+            currentLevel = level;
+            loadNextWord();
+            document.getElementById("trainerContainer").classList.remove("hidden");
+        }
+
+        // Funktion zum Laden des nächsten Wortes
+        function loadNextWord() {
+            currentWord = words[currentLevel][Math.floor(Math.random() * words[currentLevel].length)];
+            document.getElementById("userInput").value = ""; // Eingabefeld leeren
+            document.getElementById("wordToSpell").innerText = currentWord;
+
+            // Zeigt das Wort für 1 Sekunde an
+            document.getElementById("userInput").disabled = true;
+            document.getElementById("checkButton").disabled = true;
+            setTimeout(() => {
+                document.getElementById("wordToSpell").innerText = "Bereit? Schreibe das Wort!";
+                document.getElementById("userInput").disabled = false;
+                document.getElementById("checkButton").disabled = false;
+            }, 1000); // Wort für 1 Sekunde anzeigen
+        }
+
+        // Funktion zum Überprüfen der Eingabe
+        function checkSpelling() {
+            const userInput = document.getElementById("userInput").value;
+            const resultMessage = document.getElementById("resultMessage");
+
+            if (userInput === currentWord) {
+                resultMessage.innerText = "Richtig!";
+                resultMessage.classList.add("text-green-500");
+                resultMessage.classList.remove("text-red-500");
+            } else {
+                resultMessage.innerText = `Falsch! Das richtige Wort war: ${currentWord}`;
+                resultMessage.classList.add("text-red-500");
+                resultMessage.classList.remove("text-green-500");
+            }
+
+            // Nach 1 Sekunde das nächste Wort laden
+            setTimeout(() => {
+                resultMessage.innerText = ""; // Ergebnisnachricht leeren
+                loadNextWord();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
+                                   

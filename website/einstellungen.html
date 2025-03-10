@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Einstellungen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="schoolnote.jpg" type="image/x-icon">
+</head>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="tailwind.cofig.js"></script>
+<body class="bg-orange-100 text-gray-900">
+  <!-- Navigation -->
+  <nav class="bg-orange-600 text-white">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="index.html" class="text-2xl font-bold">SCHOOL NOTE</a>
+      <button id="nav-toggle" class="sm:hidden focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <ul id="nav-menu" class="hidden sm:flex space-x-6">
+        <li><a href="index.html" class="hover:underline">Startseite</a></li>
+        <li><a href="hausaufgaben.html" class="hover:underline">Hausaufgaben</a></li>
+        <li><a href="settings.html" class="hover:underline">Einstellungen</a></li>
+        <li><a href="auth.html" class="hover:underline">Login</a></li>
+      </ul>
+    </div>
+    <div id="mobile-menu" class="sm:hidden hidden px-4 pb-3">
+      <ul class="space-y-2">
+        <li><a href="index.html" class="hover:underline">Startseite</a></li>
+        <li><a href="hausaufgaben.html" class="hover:underline">Hausaufgaben</a></li>
+        <li><a href="settings.html" class="hover:underline">Einstellungen</a></li>
+        <li><a href="auth.html" class="hover:underline">Login</a></li>
+      </ul>
+    </div>
+  </nav>
+  <script>
+    const navToggle = document.getElementById('nav-toggle');
+    const navMenu = document.getElementById('mobile-menu');
+    navToggle.addEventListener('click', () => { navMenu.classList.toggle('hidden'); });
+  </script>
+
+  <!-- Einstellungen -->
+  <div class="container mx-auto p-6">
+    <h1 class="text-4xl font-bold text-center text-orange-600 mb-8">Einstellungen</h1>
+    <form id="settingsForm" class="bg-white p-6 rounded shadow-lg">
+      <!-- Kalenderauswahl -->
+      <div class="mb-4">
+        <label for="calendar" class="block text-lg font-semibold mb-2">Kalenderauswahl</label>
+        <select id="calendar" name="calendar" class="w-full p-3 border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="gregorian">Gregorianischer Kalender</option>
+          <option value="julian">Julianischer Kalender</option>
+          <option value="islamic">Islamischer Kalender</option>
+          <option value="hebrew">Hebräischer Kalender</option>
+        </select>
+      </div>
+      <!-- Spracheinstellung -->
+      <div class="mb-4">
+        <label for="language" class="block text-lg font-semibold mb-2">Sprache</label>
+        <select id="language" name="language" class="w-full p-3 border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="de">Deutsch</option>
+          <option value="en">Englisch</option>
+        </select>
+      </div>
+      <!-- Benachrichtigungseinstellungen -->
+      <div class="mb-4">
+        <label class="block text-lg font-semibold mb-2">Benachrichtigungen</label>
+        <div class="flex items-center">
+          <input type="checkbox" id="emailNotifications" name="emailNotifications" class="mr-2">
+          <label for="emailNotifications">E-Mail Benachrichtigungen aktivieren</label>
+        </div>
+      </div>
+      <!-- Konto-Verknüpfungen (z. B. Google, Apple) -->
+      <div class="mb-4">
+        <h2 class="text-2xl font-semibold mb-2 text-orange-600">Konto-Verknüpfungen</h2>
+        <div class="flex flex-col space-y-3">
+          <button type="button" onclick="connectGoogle()" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded">
+            Mit Google verbinden
+          </button>
+          <button type="button" onclick="connectApple()" class="bg-gray-800 hover:bg-gray-900 text-white p-3 rounded">
+            Mit Apple verbinden
+          </button>
+          <!-- Weitere Anbieter können hier ergänzt werden -->
+        </div>
+      </div>
+      <!-- Weitere Einstellungen -->
+      <div class="mb-4">
+        <h2 class="text-2xl font-semibold mb-2 text-orange-600">Weitere Einstellungen</h2>
+        <div class="flex items-center mb-2">
+          <input type="checkbox" id="darkMode" name="darkMode" class="mr-2">
+          <label for="darkMode">Dunkelmodus aktivieren</label>
+        </div>
+      </div>
+      <!-- Speichern-Button -->
+      <div class="text-right">
+        <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded">Einstellungen speichern</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Script zum Absenden der Einstellungen und für Konto-Verknüpfungen -->
+  <script>
+    document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const calendar = document.getElementById('calendar').value;
+      const language = document.getElementById('language').value;
+      const emailNotifications = document.getElementById('emailNotifications').checked;
+      const darkMode = document.getElementById('darkMode').checked;
+
+      const settingsData = {
+        calendar,
+        language,
+        emailNotifications,
+        darkMode
+      };
+
+      try {
+        const response = await fetch('https://api.schoolnote.eu/settings', {
+          method: 'POST', // Alternativ auch PUT oder PATCH je nach Backend-Implementierung
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settingsData)
+        });
+        if (response.ok) {
+          alert('Einstellungen wurden erfolgreich gespeichert.');
+        } else {
+          alert('Fehler beim Speichern der Einstellungen.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Ein Fehler ist aufgetreten.');
+      }
+    });
+
+    function connectGoogle() {
+      // Beispiel: Weiterleitung zur Google OAuth2.0 URL
+      window.location.href = 'https://accounts.google.com/o/oauth2/auth?client_id=422725088725-4a9b38m26h7tkspkkohap64e4q6tel2j.apps.googleusercontent.com&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=profile email';
+    }
+
+    function connectApple() {
+      // Beispiel: Weiterleitung zur Apple OAuth2.0 URL
+      window.location.href = 'https://appleid.apple.com/auth/authorize?client_id=YOUR_APPLE_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=name email';
+    }
+  </script>
+</body>
+</html>

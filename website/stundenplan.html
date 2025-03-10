@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stundenplan anzeigen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="schoolnote.jpg" type="image/x-icon">
+</head>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="tailwind.cofig.js"></script>
+<div id="navbar-container"></div>
+
+<script>
+function loadNavbar() {
+      fetch('navbar.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('navbar-container').innerHTML = html;
+          // Nachdem die Navbar geladen wurde, initialisiere die Event Listener
+          initNavbar();
+        })
+        .catch(error => console.error('Fehler beim Laden der Navbar:', error));
+    }
+
+    // Initialisierung der Navbar-Funktionalität
+    function initNavbar() {
+      console.log("Navbar initialisiert");
+
+      // Mobile Menü Toggle
+      const navToggle = document.getElementById('nav-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+
+      if (navToggle && mobileMenu) {
+        navToggle.addEventListener('click', function(event) {
+          event.preventDefault();
+          mobileMenu.classList.toggle('hidden');
+          const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+          navToggle.setAttribute('aria-expanded', !expanded);
+          navToggle.classList.toggle('bg-orange-700');
+        });
+      } else {
+        console.error("Element(e) nav-toggle oder mobile-menu nicht gefunden!");
+      }
+
+      // Mobile "Mehr" Menü Toggle
+      const mobileMoreToggle = document.getElementById('mobile-more-toggle');
+      const mobileMoreMenu = document.getElementById('mobile-more-menu');
+
+      if (mobileMoreToggle && mobileMoreMenu) {
+        mobileMoreToggle.addEventListener('click', function(event) {
+          event.preventDefault();
+          mobileMoreMenu.classList.toggle('hidden');
+          const chevronIcon = this.querySelector('svg');
+          if (mobileMoreMenu.classList.contains('hidden')) {
+            chevronIcon.style.transform = 'rotate(0deg)';
+          } else {
+            chevronIcon.style.transform = 'rotate(180deg)';
+          }
+        });
+      } else {
+        console.error("Element(e) mobile-more-toggle oder mobile-more-menu nicht gefunden!");
+      }
+    }
+
+    // Starte das Laden der Navbar, sobald der DOM geladen wurde
+    document.addEventListener("DOMContentLoaded", loadNavbar);
+</script>
+
+  
+<body class="bg-orange-100 text-gray-900">
+  <div class="container mx-auto p-6">
+    <h1 class="text-4xl font-bold text-center text-orange-600 mb-8">
+      Stundenplan
+    </h1>
+
+
+    <div id="stundenplanContainer" class="flex flex-wrap gap-4 overflow-x-auto"></div>
+
+  
+    <div class="text-center mt-6">
+      <a href="stundenplanbearbeiten.html" class="text-orange-600 underline text-lg">
+        Stundenplan bearbeiten
+      </a>
+    </div>
+  </div>
+
+  <script src="stundenplan.js"></script>
+</body>
+</html>
